@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Connect dots</title>
+    <script type="text/javascript" src="js/jquery.js"></script>
+</head>
+<body>
+    <canvas onclick="clickCanvas(event)" id="myCanvas" width="500" height="500"
+            style="border:1px solid #000000;">
+    </canvas>
+    <script type="text/javascript" src="js/dots.js"></script>
+    <script>
+        $( document ).ready(function() {
+            clickCanvas(event);
+        });
+    </script>
+    <br />
+    <button type="button" id="solveButton" onclick="connectClosest(event)">Solve</button>
+    <button type="button" id="resetButton" onclick="clearCanvas(event)">Reset</button>
+    <button type="button" id="dataButton" onclick="displayPointData(event)">Data</button>
+</body>
+</html>

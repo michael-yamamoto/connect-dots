@@ -24,14 +24,33 @@ var points = [];            //array of points created by user
 var connectedPoints = [];   //array of points that have at least one connection
 var solution = [];          //array of lines between points (x1,y1 x2,y2)
 
+// That's how you define the value of a pixel //
+/*
+function drawPixel (x, y, r, g, b, a) {
+    var index = (x + y * canvasWidth) * 4;
 
+    canvasData.data[index + 0] = r;
+    canvasData.data[index + 1] = g;
+    canvasData.data[index + 2] = b;
+    canvasData.data[index + 3] = a;
+}
+*/
 
-//draws 5x5 red box, placed where user clicks
+// That's how you update the canvas, so that your //
+// modification are taken in consideration //
+/*
+function updateCanvas() {
+    ctx.putImageData(canvasData, 0, 0);
+}
+*/
+
+//draws 5x5 red box
 function drawRect(x, y)
 {
     ctx.fillStyle = "#FF0000";
     ctx.fillRect(x,y,5,5);
 }
+
 
 function drawLine(x1, y1, x2, y2)
 {
@@ -67,12 +86,26 @@ function clearCanvas(event)
 //clear connectedPoints array
 function clearConnectedPoints()
 {
+    /*
+    while (connectedPoints.length > 0)
+    {
+        connectedPoints.pop();
+    }
+    */
     connectedPoints.length = 0;
+    //connectedPoints = [];
 }
 
 //clear points array
 function clearPoints()
 {
+    /*
+    while (points.length > 0)
+    {
+        points.pop();
+    }
+    */
+    //points = [];
     points.length = 0;
 }
 
@@ -82,6 +115,32 @@ function clearSolution()
     solution.length = 0;
 }
 
+
+//beginPath() and closePath() required otherwise old lines get redrawn after reset
+//+3 to have line start/end at center of box
+/*
+function connectClosest(event)
+{
+    var currentPoint = points[0];
+    var nextPoint;
+    connectedPoints.push(currentPoint);
+
+    ctx.beginPath();
+
+    while(connectedPoints.length < points.length)
+    {
+        nextPoint = findNearestUntouchedPoint(currentPoint);
+        drawLine(currentPoint.x + 3, currentPoint.y + 3, nextPoint.x + 3, nextPoint.y + 3);
+        connectedPoints.push(nextPoint);
+        currentPoint = nextPoint;
+    }
+    //draw line to starting point
+    drawLine(currentPoint.x + 3, currentPoint.y + 3, connectedPoints[0].x + 3, connectedPoints[0].y + 3);
+    ctx.closePath();
+
+}
+*/
+
 //main function, executes when solve button is pressed
 function connectDots(event)
 {
@@ -90,6 +149,7 @@ function connectDots(event)
 
     redrawPoints();
 
+    //findSolution();
     do
     {
         n++;
@@ -106,8 +166,9 @@ function connectDots(event)
             clearSolution();
             break;
         }
+        //alert("checkSolution = " + checkSolution());
     }while ( checkSolution() != 0);
-
+    //alert("solution.length = " + solution.length);
     drawSolution();
     clearSolution();    //TODO maybe delete, might be redundant
     clearConnectedPoints();
@@ -118,6 +179,7 @@ function connectDots(event)
 function findSolution()
 {
     clearSolution();        //clear solution array for new solution
+    //alert("findSolution");
     var currentPoint = points[0];
     var nextPoint;
     var line;
@@ -143,10 +205,30 @@ function findSolution()
 //0 good, -1 bad
 function checkSolution()
 {
+    //alert("checkSolution");
     for(var i = 0; i < solution.length; i++)
     {
+        //alert("i = " + i);
         for(var j = 0; j < solution.length; j++)
         {
+            //alert("j = " + j);
+            //testing
+            /*
+            drawCompareLines(solution[0].x1,
+                solution[0].y1,
+                solution[0].x2,
+                solution[0].y2,
+                solution[j].x1,
+                solution[j].y1,
+                solution[j].x2,
+                solution[j].y2);
+                */
+
+            /*
+            alert(solution[j].x1 + "," + solution[j].y1 + " to " + solution[j].x2 + "," + solution[j].y2 + " and "
+            + solution[j + 1].x1 + "," + solution[j + 1].y1 + " to " + solution[j + 1].x2 + "," + solution[j + 1].y2);
+            */
+
             if(line_intersects(
                     solution[0].x1,
                     solution[0].y1,
@@ -158,23 +240,44 @@ function checkSolution()
                     solution[j].y2
                 ) == true)
             {
+                /*
+                alert("line intersects!" + " "
+                    + solution[j].x1 + "," + solution[j].y1 + " "
+                    + solution[j].x2 + "," + solution[j].y2 + " "
+                    + solution[j+1].x1 + "," + solution[j+1].y1 + " "
+                    + solution[j+1].x2 + "," + solution[j+1].y2 + " "
+                );*/
                 //line intersects so return bad solution
                 return -1;
             }
         }
         //check next line vs other lines until all lines checked against each other
         rotateSolution();
+        //alert("solution.length = " + solution.length + " i = " + i);
+        //alert("i = " + i);
     }
     return 0;
 }
 
-//draws lines from points that are stored in solutions array
+//test function to show which 2 lines are currently being checked for intersection
+function drawCompareLines(x1,y1, x2, y2,  x3, y3, x4, y4)
+{
+    ctx.clearRect ( 0 , 0 , canvas.width, canvas.height );
+    redrawPoints();
+    ctx.beginPath();
+    drawLine(x1+3,y1+3,x2+3,y2+3);
+    drawLine(x3+3,y3+3,x4+3,y4+3);
+    ctx.closePath();
+}
+
+//draws lines that are stored in solutions array
 function drawSolution()
 {
     ctx.beginPath();
     for(var i = 0; i < solution.length; i++)
     {
         drawLine(solution[i].x1 + 3, solution[i].y1 + 3, solution[i].x2 + 3, solution[i].y2 + 3);
+        //alert("Just added line: " + solution[i].x1 + "," + solution[i].y1 + " to " + solution[i].x2 + "," + solution[i].y2);
     }
     ctx.closePath();
 }
@@ -212,6 +315,7 @@ function findDistance(x1, y1, x2, y2)
 //finds nearest unconnected point
 function findNearestUntouchedPoint(startingPoint)
 {
+    //var smallestDist = findDistance(startingPoint.x, startingPoint.y, points[])
     var smallestDist = Number.MAX_VALUE;
     var distance = 0;
     var shortestPoint;
@@ -229,30 +333,81 @@ function findNearestUntouchedPoint(startingPoint)
                 smallestDist = distance;
                 shortestPoint = points[i];
             }
+
         }
     }
 
     return shortestPoint;
 }
 
+//test function, displays points from data button
+function displayPointData(event)
+{
+    var dataString = "";
+    for(var i = 0; i < points.length; i++)
+    {
+        dataString = dataString + points[i].x + "," + points[i].y + " ";
+    }
+
+    alert(dataString);
+}
+
+/*
+function lineIntersect(x1,y1,x2,y2, x3,y3,x4,y4) {
+    var x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+    var y=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4));
+    if (isNaN(x)||isNaN(y)) {
+        return false;
+    } else {
+        if (x1>=x2) {
+            if (!(x2<=x&&x<=x1)) {return false;}
+        } else {
+            if (!(x1<=x&&x<=x2)) {return false;}
+        }
+        if (y1>=y2) {
+            if (!(y2<=y&&y<=y1)) {return false;}
+        } else {
+            if (!(y1<=y&&y<=y2)) {return false;}
+        }
+        if (x3>=x4) {
+            if (!(x4<=x&&x<=x3)) {return false;}
+        } else {
+            if (!(x3<=x&&x<=x4)) {return false;}
+        }
+        if (y3>=y4) {
+            if (!(y4<=y&&y<=y3)) {return false;}
+        } else {
+            if (!(y3<=y&&y<=y4)) {return false;}
+        }
+    }
+    return true;
+}
+*/
+
+
+
 //checks to see if 2 lines intersect
 function line_intersects(p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y) {
 
-    //if lines end at same point, that doesn't count as intersecting
+    //if lines are at same point, that doesn't count as intersecting
     if ( (p0_x == p2_x) && (p0_y == p2_y) )
     {
+        //alert("point1start = point2start");
         return false;
     }
     else if ( (p0_x == p3_x) && (p0_y == p3_y) )
     {
+        //alert("point1start = point2end");
         return false;
     }
     else if ( (p1_x == p2_x) && (p1_y == p2_y) )
     {
+        //alert("point1end = point2start");
         return false;
     }
     else if ( (p1_x == p3_x) && (p1_y == p3_y) )
     {
+        //alert("point1end = point2end");
         return false;
     }
     else {
